@@ -1,6 +1,15 @@
-import { APIGatewayProxyEvent } from "aws-lambda";
+import {
+  APIGatewayProxyEvent,
+  APIGatewayProxyResult,
+  Handler,
+} from 'aws-lambda'
+
+export type APIGatewayProxyHandler = Handler<
+  APIGatewayProxyEvent,
+  APIGatewayProxyResult
+>
 
 export interface GetS3ObjectByKeyEvent extends APIGatewayProxyEvent {
-  bucket: string;
-  key: string;
+  bucket?: string
+  key?: string
 }

@@ -3,7 +3,7 @@ import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { BoxGeometry, Scene, MeshBasicMaterial, Mesh } from 'three'
 import { APIGatewayProxyResult } from 'aws-lambda'
 
-import { GetS3ObjectByKeyEvent } from './types'
+import { APIGatewayProxyHandler, GetS3ObjectByKeyEvent } from './types'
 
 const client = new S3Client({})
 
@@ -40,9 +40,13 @@ const getS3Object = (Bucket: string, Key: string): Promise<string> => {
   })
 }
 
-export const lambdaHandler = async (
-  event: GetS3ObjectByKeyEvent
-): Promise<APIGatewayProxyResult> => {
+export const lambdaHandler: APIGatewayProxyHandler = async (
+  event: GetS3ObjectByKeyEvent,
+  _context
+) => {
+  if (!event?.bucket || !event?.key)
+    return { statusCode: 400, body: 'No bucket or key' }
+
   let handlerResponse: APIGatewayProxyResult | null = null
 
   try {
