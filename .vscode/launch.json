@@ -1,0 +1,23 @@
+{
+  "configurations": [
+    {
+      "type": "aws-sam",
+      "request": "direct-invoke",
+      "name": "lambda-nodejs16.x:HelloWorldFunction",
+      "invokeTarget": {
+        "target": "template",
+        "templatePath": "${workspaceFolder}/lambda-nodejs16.x/template.yaml",
+        "logicalId": "HelloWorldFunction"
+      },
+      "lambda": {
+        "payload": {
+          "json": {
+            "bucket": "vw-dpa-mp-3d-files",
+            "key": "TEST/TEST-TEST-EG-PLP-foerdertechnik-001.mbtiles"
+          }
+        },
+        "environmentVariables": {}
+      }
+    }
+  ]
+}

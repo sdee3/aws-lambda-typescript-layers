@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Globals:
+  Function:
+    Timeout: 3
+
+Resources:
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: hello-world/dist
+      Handler: app.lambdaHandler
+      Runtime: nodejs16.x
+      Layers:
+        - !Ref AwsDepsLayer
+        - !Ref ThreeJsLayer
+        # OR:
+        # - arn:aws:lambda:eu-central-1:321711399508:layer:aws-deps:4
+        # - arn:aws:lambda:eu-central-1:321711399508:layer:threejs:2
+
+  AwsDepsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+        LayerName: aws-deps
+        Description: AWS NPM Dependencies
+        ContentUri: layers/aws-deps
+        CompatibleRuntimes:
+          - nodejs14.x
+          - nodejs16.x
+        LicenseInfo: 'MIT'
+        RetentionPolicy: Retain
+
+  ThreeJsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+        LayerName: threejs
+        Description: Three.js NPM Dependencies
+        ContentUri: layers/three
+        CompatibleRuntimes:
+          - nodejs14.x
+          - nodejs16.x
+        LicenseInfo: 'MIT'
+        RetentionPolicy: Retain

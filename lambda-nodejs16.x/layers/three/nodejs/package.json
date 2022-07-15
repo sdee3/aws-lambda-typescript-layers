@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "three": "^0.142.0"
+  },
+  "description": "",
+  "devDependencies": {},
+  "name": "nodejs",
+  "version": "1.0.0"
+}

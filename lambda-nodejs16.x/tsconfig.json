@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "allowJs": false,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "esModuleInterop": true,
+    "lib": ["DOM", "DOM.Iterable", "ES2020"],
+    "module": "commonjs",
+    "moduleResolution": "Node",
+    "outDir": "./hello-world/dist",
+    "paths": {
+      "@aws-sdk/client-s3": [
+        "./layers/aws-deps/nodejs/node_modules/@aws-sdk/client-s3"
+      ],
+      "three": ["./layers/three/nodejs/node_modules/three"]
+    },
+    "resolveJsonModule": true,
+    "rootDir": "./hello-world/src",
+    "strict": true,
+    "target": "es2020",
+    "types": ["node"]
+  },
+  "include": ["hello-world/src/**/*"],
+  "exclude": ["hello-world/dist", "layers", "events", ".aws-sam"]
+}
