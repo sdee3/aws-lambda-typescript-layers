@@ -6,8 +6,8 @@
     "esModuleInterop": true,
     "lib": ["DOM", "DOM.Iterable", "ES2020"],
     "module": "commonjs",
-    "moduleResolution": "Node",
-    "outDir": "./hello-world/dist",
+    "moduleResolution": "node",
+    "outDir": "./functions/dist",
     "paths": {
       "@aws-sdk/client-s3": [
         "./layers/aws-deps/nodejs/node_modules/@aws-sdk/client-s3"
@@ -15,11 +15,12 @@
       "three": ["./layers/three/nodejs/node_modules/three"]
     },
     "resolveJsonModule": true,
-    "rootDir": "./hello-world/src",
+    "rootDir": "./functions",
+    "skipLibCheck": true,
     "strict": true,
     "target": "es2020",
-    "types": ["node"]
+    "types": ["node", "jest", "@types/jest"]
   },
-  "include": ["hello-world/src/**/*"],
-  "exclude": ["hello-world/dist", "layers", "events", ".aws-sam"]
+  "include": ["functions/src/**/*"],
+  "exclude": ["functions/dist", "layers", "events", ".aws-sam"]
 }

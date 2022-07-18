@@ -12,7 +12,6 @@
       "lambda": {
         "payload": {
           "json": {
-            "bucket": "vw-dpa-mp-3d-files",
             "key": "TEST/TEST-TEST-EG-PLP-foerdertechnik-001.mbtiles"
           }
         },

@@ -10,6 +10,5 @@ export type APIGatewayProxyHandler = Handler<
 >
 
 export interface GetS3ObjectByKeyEvent extends APIGatewayProxyEvent {
-  bucket?: string
   key?: string
 }
