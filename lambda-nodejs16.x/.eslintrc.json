@@ -27,7 +27,7 @@
         "allow": ["info", "error"]
       }
     ],
-    "import/no-unresolved": "error",
+    "import/no-unresolved": 0,
     "import/order": [
       "error",
       { "groups": ["builtin", "external", "parent", "sibling", "index"] }

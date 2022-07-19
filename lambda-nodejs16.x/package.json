@@ -27,7 +27,7 @@
     "typescript": "^4.7.4"
   },
   "scripts": {
-    "build": "rimraf ./functions/dist && tsc",
+    "build": "rimraf ./functions/dist && tsc --outfile functions/dist/app.js",
     "test": "jest"
   },
   "version": "1.0.0"
