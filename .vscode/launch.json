@@ -3,10 +3,10 @@
     {
       "type": "aws-sam",
       "request": "direct-invoke",
-      "name": "lambda-nodejs16.x:HelloWorldFunction",
+      "name": "HelloWorldFunction",
       "invokeTarget": {
         "target": "template",
-        "templatePath": "${workspaceFolder}/lambda-nodejs16.x/template.yaml",
+        "templatePath": "${workspaceFolder}/template.yaml",
         "logicalId": "HelloWorldFunction"
       },
       "lambda": {

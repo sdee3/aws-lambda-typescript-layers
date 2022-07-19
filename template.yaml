@@ -12,7 +12,7 @@ Resources:
       Environment:
         Variables:
           BUCKET_NAME: vw-dpa-mp-3d-files
-      CodeUri: functions/src
+      CodeUri: functions/dist/src
       Handler: app.lambdaHandler
       Runtime: nodejs16.x
       Layers:
