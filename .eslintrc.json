@@ -17,7 +17,7 @@
     "node": true,
     "jest": true
   },
-  "ignorePatterns": ["functions/dist/*"],
+  "ignorePatterns": ["functions/dist/*", "webpack.config.ts"],
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint", "import"],
   "rules": {

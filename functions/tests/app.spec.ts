@@ -15,7 +15,7 @@ describe('Unit test for app handler', function () {
   })
 
   it('verifies successful response', async () => {
-    process.env.BUCKET_NAME = 'vw-dpa-mp-3d-files'
+    process.env.BUCKET_NAME = 'test-hwp-7331'
 
     const event: APIGatewayProxyEvent = {
       key: 'TEST/TEST-TEST-EG-PLP-foerdertechnik-001.mbtiles',

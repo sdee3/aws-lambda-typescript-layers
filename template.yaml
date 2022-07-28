@@ -11,8 +11,8 @@ Resources:
     Properties:
       Environment:
         Variables:
-          BUCKET_NAME: vw-dpa-mp-3d-files
-      CodeUri: functions/dist/src
+          BUCKET_NAME: test-hwp-7331
+      CodeUri: functions/dist
       Handler: app.lambdaHandler
       Runtime: nodejs16.x
       Layers:

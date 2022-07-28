@@ -12,7 +12,8 @@
       "lambda": {
         "payload": {
           "json": {
-            "key": "TEST/TEST-TEST-EG-PLP-foerdertechnik-001.mbtiles"
+            "folder": "TEST",
+            "key": "2100-000A1-HG-L9-MONTAGE-2675_VAE.fbx"
           }
         },
         "environmentVariables": {}
