@@ -1,15 +1,9 @@
 import { Stream } from 'stream'
-import path from 'path'
+import fs from 'fs/promises'
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3'
-import {
-  BoxGeometry,
-  Scene,
-  MeshBasicMaterial,
-  Mesh,
-  LoadingManager,
-} from 'three'
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 import { APIGatewayProxyResult } from 'aws-lambda'
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
+import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter'
 import { GetS3ObjectByKeyEvent } from './types'
 
 const client = new S3Client({})
@@ -82,30 +76,27 @@ export const lambdaHandler = async (event: GetS3ObjectByKeyEvent) => {
       event.key
     )
 
-    console.info('Converting data to GLT...', data.byteLength)
+    console.info('Converting data to GLB...', data.byteLength)
 
-    // const loadingManager = new LoadingManager()
-    // const loader = new FBXLoader(loadingManager)
+    const fbxTmpFilePath = '/tmp/temp.fbx'
+    const glbTmpFilePath = '/tmp/temp.glb'
+    await fs.writeFile(fbxTmpFilePath, new DataView(data), 'binary')
 
-    // loadingManager.onError = (url: string) => {
-    //   console.error('Error loading GLT from URL: ' + url)
-    // }
+    console.info('FBX File written!')
 
-    // loadingManager.onLoad = () => {
-    //   console.info('Finished loading')
-    // }
+    const fbxLoader = new FBXLoader()
+    const group = await fbxLoader.loadAsync(fbxTmpFilePath)
 
-    // loader.parse(data, path.resolve(__dirname, 'my_file'))
+    console.info('FBX File loaded! Starting conversion to GLB...')
 
-    const scene = new Scene()
-    const geometry = new BoxGeometry(1, 1, 1)
-    const material = new MeshBasicMaterial({ color: 0x00ff00 })
-    const cube = new Mesh(geometry, material)
+    const gltfExporter = new GLTFExporter()
+    const glbBuffer = await gltfExporter.parseAsync(group)
 
-    console.info('Scene ID:', scene.id)
-    console.info('Geometry ID:', geometry.id)
-    console.info('Material ID:', material.id)
-    console.info('Cube ID:', cube.id)
+    console.info('File converted to GLT!', glbBuffer.byteLength)
+
+    const result = await fs.readFile(glbTmpFilePath)
+
+    console.info('Converting data to GLT done! Result:', result.byteLength)
 
     handlerResponse = {
       statusCode: 200,

@@ -25,6 +25,7 @@ const config: Configuration = {
         __dirname,
         'layers/aws-deps/nodejs/node_modules/@aws-sdk/client-s3'
       ),
+      fbx2gltf: path.resolve(__dirname, '/layers/fbx2gltf/nodejs'),
       three: path.resolve(__dirname, 'layers/three/nodejs/node_modules/three'),
     },
     extensions: ['.ts', '.js'],

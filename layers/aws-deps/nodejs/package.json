@@ -1,6 +1,7 @@
 {
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.129.0"
+    "@aws-sdk/client-s3": "^3.129.0",
+    "fbx2gltf": "^0.9.7-p1"
   },
   "description": "",
   "name": "nodejs",

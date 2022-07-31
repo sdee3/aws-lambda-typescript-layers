@@ -34,6 +34,18 @@ Resources:
       LicenseInfo: 'MIT'
       RetentionPolicy: Retain
 
+  Fbx2GltLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: fbx2glt
+      Description: FBX2GLT convertor
+      ContentUri: layers/fbx2glt
+      CompatibleRuntimes:
+        - nodejs14.x
+        - nodejs16.x
+      LicenseInfo: 'MIT'
+      RetentionPolicy: Retain
+
   ThreeJsLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
