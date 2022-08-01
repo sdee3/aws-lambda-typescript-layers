@@ -4,6 +4,7 @@ import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { APIGatewayProxyResult } from 'aws-lambda'
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter'
+import { LoadingManager } from 'three'
 import { GetS3ObjectByKeyEvent } from './types'
 
 const client = new S3Client({})
@@ -67,51 +68,49 @@ export const lambdaHandler = async (event: GetS3ObjectByKeyEvent) => {
 
   let handlerResponse: APIGatewayProxyResult | null = null
 
-  try {
-    console.info('Fetching data from Bucket:', process.env.BUCKET_NAME)
+  console.info('Fetching data from Bucket:', process.env.BUCKET_NAME)
 
-    const data = await getS3Object(
-      process.env.BUCKET_NAME,
-      event.folder,
-      event.key
-    )
+  const data = await getS3Object(
+    process.env.BUCKET_NAME,
+    event.folder,
+    event.key
+  )
 
-    console.info('Converting data to GLB...', data.byteLength)
+  console.info('Converting data to GLB...', data.byteLength)
 
-    const fbxTmpFilePath = '/tmp/temp.fbx'
-    const glbTmpFilePath = '/tmp/temp.glb'
-    await fs.writeFile(fbxTmpFilePath, new DataView(data), 'binary')
+  const fbxTmpFilePath = '/tmp/temp.fbx'
+  const glbTmpFilePath = '/tmp/temp.glb'
+  await fs.writeFile(fbxTmpFilePath, new DataView(data), 'binary')
 
-    console.info('FBX File written!')
+  console.info('FBX File written!')
 
-    const fbxLoader = new FBXLoader()
-    const group = await fbxLoader.loadAsync(fbxTmpFilePath)
+  const loadingManager = new LoadingManager(
+    () => console.info('Loaded'),
+    (url, loaded, total) => console.info(url, loaded, total),
+    error => console.error(error)
+  )
 
-    console.info('FBX File loaded! Starting conversion to GLB...')
+  const fbxLoader = new FBXLoader(loadingManager)
 
-    const gltfExporter = new GLTFExporter()
-    const glbBuffer = await gltfExporter.parseAsync(group)
+  const group = await fbxLoader.loadAsync(fbxTmpFilePath)
 
-    console.info('File converted to GLT!', glbBuffer.byteLength)
+  console.info('FBX File loaded! Starting conversion to GLB...')
 
-    const result = await fs.readFile(glbTmpFilePath)
+  const gltfExporter = new GLTFExporter()
+  const glbBuffer = await gltfExporter.parseAsync(group)
 
-    console.info('Converting data to GLT done! Result:', result.byteLength)
+  console.info('File converted to GLT!', glbBuffer.byteLength)
 
-    handlerResponse = {
-      statusCode: 200,
-      body: JSON.stringify({
-        message: event.key,
-        dataSize: data.byteLength,
-      }),
-    }
-  } catch (err) {
-    handlerResponse = {
-      statusCode: 500,
-      body: JSON.stringify({
-        message: err,
-      }),
-    }
+  const result = await fs.readFile(glbTmpFilePath)
+
+  console.info('Converting data to GLT done! Result:', result.byteLength)
+
+  handlerResponse = {
+    statusCode: 200,
+    body: JSON.stringify({
+      message: event.key,
+      dataSize: data.byteLength,
+    }),
   }
 
   return handlerResponse
