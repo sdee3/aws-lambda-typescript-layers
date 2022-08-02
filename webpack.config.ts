@@ -25,6 +25,30 @@ const config: Configuration = {
         __dirname,
         'layers/aws-deps/nodejs/node_modules/@aws-sdk/client-s3'
       ),
+      '@andreekeberg/imagedata': path.resolve(
+        __dirname,
+        './layers/three/nodejs/node_modules/@andreekeberg/imagedata'
+      ),
+      canvas: path.resolve(
+        __dirname,
+        './layers/three/nodejs/node_modules/canvas'
+      ),
+      'fetch-blob': path.resolve(
+        __dirname,
+        './layers/three/nodejs/node_modules/fetch-blob'
+      ),
+      jsdom: path.resolve(
+        __dirname,
+        './layers/three/nodejs/node_modules/jsdom'
+      ),
+      filereader: path.resolve(
+        __dirname,
+        './layers/three/nodejs/node_modules/filereader'
+      ),
+      'node-html-parser': path.resolve(
+        __dirname,
+        './layers/three/nodejs/node_modules/node-html-parser'
+      ),
       three: path.resolve(__dirname, 'layers/three/nodejs/node_modules/three'),
     },
     extensions: ['.ts', '.js'],

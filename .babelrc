@@ -17,7 +17,12 @@
         "root": ["./functions/src"],
         "alias": {
           "aws-sdk/client-s3": "./layers/aws-deps/nodejs/node_modules/@aws-sdk/client-s3",
-          "fbx2gltf": "./layers/fbx2gltf/nodejs/*",
+          "@andreekeberg/imagedata": "./layers/three/nodejs/node_modules/@andreekeberg/imagedata",
+          "canvas": "./layers/three/nodejs/node_modules/canvas",
+          "fetch-blob": "./layers/three/nodejs/node_modules/fetch-blob",
+          "filereader": "./layers/three/nodejs/node_modules/filereader",
+          "jsdom": "./layers/three/nodejs/node_modules/jsdom",
+          "node-html-parser": "./layers/three/nodejs/node_modules/node-html-parser",
           "three": "./layers/three/nodejs/node_modules/three"
         }
       }

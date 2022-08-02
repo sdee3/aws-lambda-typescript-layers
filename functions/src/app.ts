@@ -1,10 +1,9 @@
 import { Stream } from 'stream'
-import fs from 'fs/promises'
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { APIGatewayProxyResult } from 'aws-lambda'
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
-import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter'
 import { LoadingManager } from 'three'
+import { FBXLoader } from './utils/FBXLoader'
+import { GLTFExporter } from './utils/GLTFExporter'
 import { GetS3ObjectByKeyEvent } from './types'
 
 const client = new S3Client({})
@@ -13,7 +12,7 @@ const getS3Object = (
   Bucket: string,
   Folder: string,
   Key: string
-): Promise<ArrayBuffer> => {
+): Promise<string> => {
   return new Promise(async (resolve, reject) => {
     const getObjectCommand = new GetObjectCommand({
       Bucket,
@@ -25,7 +24,7 @@ const getS3Object = (
 
       if (!response?.Body) throw new Error('No response')
 
-      const responseDataChunks: Buffer[] = []
+      const responseDataChunks: string[] = []
       const responseBodyStream = response.Body as Stream
 
       // Handle an error while streaming the response body
@@ -33,28 +32,12 @@ const getS3Object = (
 
       // Attach a 'data' listener to add the chunks of data to our array
       // Each chunk is a Buffer instance
-      responseBodyStream.on('data', (chunk: Buffer) =>
+      responseBodyStream.on('data', (chunk: string) =>
         responseDataChunks.push(chunk)
       )
 
       // Once the stream has no more data, join the chunks into a string and return the string
-      responseBodyStream.once('end', () => {
-        const byteLength = responseDataChunks.reduce(
-          (sum, current) => sum + current.length,
-          0
-        )
-
-        const result = new ArrayBuffer(byteLength)
-        const view = new Uint8Array(result)
-
-        for (let i = 0; i < responseDataChunks.length; i++) {
-          for (let j = 0; j < responseDataChunks[i].length; j++) {
-            view[i] = responseDataChunks[i][j]
-          }
-        }
-
-        resolve(result)
-      })
+      responseBodyStream.once('end', () => resolve(responseDataChunks.join('')))
     } catch (err) {
       // Handle the error or throw
       return reject(err)
@@ -68,7 +51,8 @@ export const lambdaHandler = async (event: GetS3ObjectByKeyEvent) => {
 
   let handlerResponse: APIGatewayProxyResult | null = null
 
-  console.info('Fetching data from Bucket:', process.env.BUCKET_NAME)
+  const fullFBXPath = `${process.env.BUCKET_NAME}/${event.folder}/${event.key}`
+  console.info('Fetching data from Bucket:', fullFBXPath)
 
   const data = await getS3Object(
     process.env.BUCKET_NAME,
@@ -76,13 +60,7 @@ export const lambdaHandler = async (event: GetS3ObjectByKeyEvent) => {
     event.key
   )
 
-  console.info('Converting data to GLB...', data.byteLength)
-
-  const fbxTmpFilePath = '/tmp/temp.fbx'
-  const glbTmpFilePath = '/tmp/temp.glb'
-  await fs.writeFile(fbxTmpFilePath, new DataView(data), 'binary')
-
-  console.info('FBX File written!')
+  console.info('FBX loaded from S3. File size in bytes:', data.length)
 
   const loadingManager = new LoadingManager(
     () => console.info('Loaded'),
@@ -90,26 +68,24 @@ export const lambdaHandler = async (event: GetS3ObjectByKeyEvent) => {
     error => console.error(error)
   )
 
-  const fbxLoader = new FBXLoader(loadingManager)
+  const fbxTmpFilePath = './tmp/fbx_1.fbx'
+  // const glbTmpFilePath = './tmp/glb_1.glb'
 
-  const group = await fbxLoader.loadAsync(fbxTmpFilePath)
+  const fbxLoader = new FBXLoader(loadingManager)
+  const group = fbxLoader.parse(data, fbxTmpFilePath)
 
   console.info('FBX File loaded! Starting conversion to GLB...')
 
   const gltfExporter = new GLTFExporter()
-  const glbBuffer = await gltfExporter.parseAsync(group)
+  const glbBuffer = await gltfExporter.parseAsync(group, { binary: true })
 
   console.info('File converted to GLT!', glbBuffer.byteLength)
-
-  const result = await fs.readFile(glbTmpFilePath)
-
-  console.info('Converting data to GLT done! Result:', result.byteLength)
 
   handlerResponse = {
     statusCode: 200,
     body: JSON.stringify({
       message: event.key,
-      dataSize: data.byteLength,
+      dataSize: data.length,
     }),
   }
 

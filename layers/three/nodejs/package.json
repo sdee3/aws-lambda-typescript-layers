@@ -1,9 +1,15 @@
 {
   "dependencies": {
+    "@andreekeberg/imagedata": "^1.0.2",
+    "canvas": "^2.9.3",
+    "fetch-blob": "^3.2.0",
+    "filereader": "^0.10.3",
+    "jsdom": "^20.0.0",
+    "node-fetch": "^3.2.10",
+    "node-html-parser": "^5.3.3",
     "three": "^0.142.0"
   },
   "description": "",
-  "devDependencies": {},
   "name": "nodejs",
   "version": "1.0.0"
 }
