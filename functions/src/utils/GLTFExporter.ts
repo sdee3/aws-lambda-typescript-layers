@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-this-alias */
-import { JSDOM } from 'jsdom'
 import { parse } from 'node-html-parser'
 import ImageData from '@andreekeberg/imagedata'
 import FileReader from 'filereader'
@@ -28,7 +27,7 @@ import {
   sRGBEncoding,
   Vector3,
 } from 'three'
-import { Blob } from 'fetch-blob'
+import { Canvas } from 'canvas'
 
 class GLTFExporter {
   pluginCallbacks: any[]
@@ -310,10 +309,8 @@ function getCanvas() {
   //     return new OffscreenCanvas(1, 1)
   //   }
 
-  const dom = new JSDOM(
-    `<!DOCTYPE html><body><canvas id="canvas"></canvas></body>`
-  )
-  return dom.window.document.body.querySelector('#canvas') as HTMLCanvasElement
+  const canvas = new Canvas(1, 1)
+  return canvas
 }
 
 function getToBlobPromise(canvas, mimeType) {
@@ -436,78 +433,89 @@ class GLTFWriter {
     const extensionsUsed = writer.extensionsUsed
 
     // Merge buffers.
-    const blob = new Blob(buffers, { type: 'application/octet-stream' })
+    import('fetch-blob').then(({ Blob }) => {
+      const blob = new Blob(buffers, { type: 'application/octet-stream' })
 
-    // Declare extensions.
-    const extensionsUsedList = Object.keys(extensionsUsed)
+      // Declare extensions.
+      const extensionsUsedList = Object.keys(extensionsUsed)
 
-    if (extensionsUsedList.length > 0) json.extensionsUsed = extensionsUsedList
+      if (extensionsUsedList.length > 0)
+        json.extensionsUsed = extensionsUsedList
 
-    // Update bytelength of the single buffer.
-    if (json.buffers && json.buffers.length > 0)
-      json.buffers[0].byteLength = blob.size
+      // Update bytelength of the single buffer.
+      if (json.buffers && json.buffers.length > 0)
+        json.buffers[0].byteLength = blob.size
 
-    if (options.binary === true) {
-      // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#glb-file-format-specification
+      if (options.binary === true) {
+        // https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#glb-file-format-specification
 
-      const reader = new FileReader(blob)
-      reader.onloadend = function () {
-        // Binary chunk.
-        const binaryChunk = getPaddedArrayBuffer(reader.result)
-        const binaryChunkPrefix = new DataView(
-          new ArrayBuffer(GLB_CHUNK_PREFIX_BYTES)
-        )
-        binaryChunkPrefix.setUint32(0, binaryChunk.byteLength, true)
-        binaryChunkPrefix.setUint32(4, GLB_CHUNK_TYPE_BIN, true)
-
-        // JSON chunk.
-        const jsonChunk = getPaddedArrayBuffer(
-          stringToArrayBuffer(JSON.stringify(json)),
-          0x20
-        )
-        const jsonChunkPrefix = new DataView(
-          new ArrayBuffer(GLB_CHUNK_PREFIX_BYTES)
-        )
-        jsonChunkPrefix.setUint32(0, jsonChunk.byteLength, true)
-        jsonChunkPrefix.setUint32(4, GLB_CHUNK_TYPE_JSON, true)
-
-        // GLB header.
-        const header = new ArrayBuffer(GLB_HEADER_BYTES)
-        const headerView = new DataView(header)
-        headerView.setUint32(0, GLB_HEADER_MAGIC, true)
-        headerView.setUint32(4, GLB_VERSION, true)
-        const totalByteLength =
-          GLB_HEADER_BYTES +
-          jsonChunkPrefix.byteLength +
-          jsonChunk.byteLength +
-          binaryChunkPrefix.byteLength +
-          binaryChunk.byteLength
-        headerView.setUint32(8, totalByteLength, true)
-
-        const glbBlob = new Blob(
-          [header, jsonChunkPrefix, jsonChunk, binaryChunkPrefix, binaryChunk],
-          { type: 'application/octet-stream' }
-        )
-
-        const glbReader = new FileReader()
-        glbReader.readAsArrayBuffer(glbBlob)
-        glbReader.onloadend = function () {
-          onDone(glbReader.result)
-        }
-      }
-    } else {
-      if (json.buffers && json.buffers.length > 0) {
-        const reader = new FileReader()
-        reader.readAsDataURL(blob)
+        const reader = new FileReader(blob)
         reader.onloadend = function () {
-          const base64data = reader.result
-          json.buffers[0].uri = base64data
-          onDone(json)
+          // Binary chunk.
+          const binaryChunk = getPaddedArrayBuffer(reader.result)
+          const binaryChunkPrefix = new DataView(
+            new ArrayBuffer(GLB_CHUNK_PREFIX_BYTES)
+          )
+          binaryChunkPrefix.setUint32(0, binaryChunk.byteLength, true)
+          binaryChunkPrefix.setUint32(4, GLB_CHUNK_TYPE_BIN, true)
+
+          // JSON chunk.
+          const jsonChunk = getPaddedArrayBuffer(
+            stringToArrayBuffer(JSON.stringify(json)),
+            0x20
+          )
+          const jsonChunkPrefix = new DataView(
+            new ArrayBuffer(GLB_CHUNK_PREFIX_BYTES)
+          )
+          jsonChunkPrefix.setUint32(0, jsonChunk.byteLength, true)
+          jsonChunkPrefix.setUint32(4, GLB_CHUNK_TYPE_JSON, true)
+
+          // GLB header.
+          const header = new ArrayBuffer(GLB_HEADER_BYTES)
+          const headerView = new DataView(header)
+          headerView.setUint32(0, GLB_HEADER_MAGIC, true)
+          headerView.setUint32(4, GLB_VERSION, true)
+          const totalByteLength =
+            GLB_HEADER_BYTES +
+            jsonChunkPrefix.byteLength +
+            jsonChunk.byteLength +
+            binaryChunkPrefix.byteLength +
+            binaryChunk.byteLength
+          headerView.setUint32(8, totalByteLength, true)
+
+          import('fetch-blob').then(({ Blob }) => {
+            const glbBlob = new Blob(
+              [
+                header,
+                jsonChunkPrefix,
+                jsonChunk,
+                binaryChunkPrefix,
+                binaryChunk,
+              ],
+              { type: 'application/octet-stream' }
+            )
+
+            const glbReader = new FileReader()
+            glbReader.readAsArrayBuffer(glbBlob)
+            glbReader.onloadend = function () {
+              onDone(glbReader.result)
+            }
+          })
         }
       } else {
-        onDone(json)
+        if (json.buffers && json.buffers.length > 0) {
+          const reader = new FileReader()
+          reader.readAsDataURL(blob)
+          reader.onloadend = function () {
+            const base64data = reader.result
+            json.buffers[0].uri = base64data
+            onDone(json)
+          }
+        } else {
+          onDone(json)
+        }
       }
-    }
+    })
   }
 
   /**
@@ -969,7 +977,7 @@ class GLTFWriter {
    * @param  {String} mimeType export format
    * @return {Integer}     Index of the processed texture in the "images" array
    */
-  processImage(image, format, flipY, mimeType = 'image/png') {
+  processImage(image, format, flipY, mimeType: any = 'image/png') {
     const writer = this
     const cache = writer.cache
     const json: any = writer.json
