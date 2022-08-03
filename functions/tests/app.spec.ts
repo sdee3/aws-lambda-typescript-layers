@@ -8,12 +8,17 @@ const mockStream = Readable.from(objectKey)
 
 jest.mock('@aws-sdk/client-s3', () => {
   const mockS3Client = {
-    send: jest
-      .fn()
-      .mockImplementation(() => Promise.resolve({ Body: mockStream })),
+    send: jest.fn().mockImplementation(({ Key }) => {
+      if (Key === objectKey) return Promise.resolve({ Body: mockStream })
+
+      return Promise.resolve({})
+    }),
   }
 
-  return { S3Client: jest.fn(() => mockS3Client), GetObjectCommand: jest.fn() }
+  return {
+    S3Client: jest.fn(() => mockS3Client),
+    GetObjectCommand: jest.fn(({ Bucket, Key }) => ({ Bucket, Key })),
+  }
 })
 
 describe('Unit test for app handler', function () {
@@ -24,6 +29,19 @@ describe('Unit test for app handler', function () {
     const result = await lambdaHandler(event)
 
     expect(result.statusCode).toEqual(400)
+    expect(result.body).toMatchSnapshot()
+  })
+
+  it('catches error 500 with empty body', async () => {
+    process.env.BUCKET_NAME = 'test-hwp-7331'
+
+    const event: APIGatewayProxyEvent = {
+      key: '123',
+    } as any
+
+    const result = await lambdaHandler(event)
+
+    expect(result.statusCode).toEqual(500)
     expect(result.body).toMatchSnapshot()
   })
 

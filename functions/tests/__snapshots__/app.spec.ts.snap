@@ -1,3 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Unit test for app handler catches error 500 with empty body 1`] = `"{\\"message\\":{}}"`;
+
 exports[`Unit test for app handler verifies error code 400 response 1`] = `"No key provided!"`;

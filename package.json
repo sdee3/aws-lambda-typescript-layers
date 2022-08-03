@@ -34,7 +34,7 @@
   },
   "scripts": {
     "build": "rimraf ./functions/dist && tsc --project tsconfig.build.json",
-    "test": "jest"
+    "test": "jest --coverage"
   },
   "version": "1.0.0"
 }
