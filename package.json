@@ -26,6 +26,12 @@
     "ts-node": "^10.9.1",
     "typescript": "^4.7.4"
   },
+  "jest": {
+    "moduleNameMapper": {
+      "^@aws-sdk/client-s3": "<rootDir>/layers/aws-deps/nodejs/node_modules/@aws-sdk/client-s3",
+      "^three": "<rootDir>/layers/three/nodejs/node-modules/three"
+    }
+  },
   "scripts": {
     "build": "rimraf ./functions/dist && tsc --project tsconfig.build.json",
     "test": "jest"
