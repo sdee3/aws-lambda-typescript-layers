@@ -5,6 +5,7 @@
     "fetch-blob": "^3.2.0",
     "filereader": "^0.10.3",
     "jsdom": "^20.0.0",
+    "node-blob": "^0.0.2",
     "node-fetch": "2.6.1",
     "node-html-parser": "^5.3.3",
     "three": "^0.142.0",
