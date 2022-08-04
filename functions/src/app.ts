@@ -79,7 +79,7 @@ const convertFbxToGlb = (s3ObjectUrl: string) => {
 
         gltfExporter.parse(
           object,
-          async result => {
+          result => {
             const arrayBuffer = result as ArrayBuffer
             console.info('GLB File created!', arrayBuffer.byteLength)
 
