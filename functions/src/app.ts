@@ -4,14 +4,15 @@ import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { APIGatewayProxyResult } from 'aws-lambda'
 import { ImageData } from '@andreekeberg/imagedata'
 import { FileReader } from 'filereader'
+import { Request } from 'node-fetch'
 import { GetS3ObjectByKeyEvent } from './types'
 import { FBXLoader, GLTFExporter } from 'three-stdlib'
-import { Canvas } from 'canvas'
+// import { Canvas } from 'canvas'
 
 global.FileReader = FileReader
 global.ImageData = ImageData
-global.Request = require('node-fetch')
-global.Canvas = Canvas
+global.Request = Request
+// global.Canvas = Canvas
 
 const client = new S3Client({})
 
