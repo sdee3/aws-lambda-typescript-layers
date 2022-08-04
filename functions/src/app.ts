@@ -71,7 +71,7 @@ const convertFbxToGlb = (s3ObjectUrl: string) => {
     const fbxLoader = new FBXLoader()
 
     fbxLoader.load(
-      'https://test-hwp-7331.s3.eu-central-1.amazonaws.com/TEST/2100-000A1-HG-L9-MONTAGE-2675_VAE_FT.fbx',
+      s3ObjectUrl,
       object => {
         console.info('FBX File parsed! Starting conversion to GLB...')
 
