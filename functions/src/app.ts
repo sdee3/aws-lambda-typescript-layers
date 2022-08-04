@@ -1,21 +1,27 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Stream } from 'stream'
-import fs from 'fs/promises'
-import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3'
-import { APIGatewayProxyResult } from 'aws-lambda'
+import {
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3'
 import { ImageData } from '@andreekeberg/imagedata'
+import { JSDOM } from 'jsdom'
 import fetch, { Request, Headers } from 'node-fetch'
 import { GetS3ObjectByKeyEvent } from './types'
-import { FileReader } from './utils/FileReader'
-import Blob from 'node-blob'
+import { Canvas } from 'canvas'
 import { FBXLoader, GLTFExporter } from 'three-stdlib'
 
-global.FileReader = FileReader
+const domWindow = new JSDOM()
+
+global.FileReader = domWindow.window.FileReader
 global.ImageData = ImageData
-global.Request = Request
-global.Headers = Headers
-global.Blob = Blob
-global.fetch = fetch
-global.window = global
+global.Request = Request as any
+global.Headers = Headers as any
+global.Blob = domWindow.window.Blob
+global.fetch = fetch as any
+global.Canvas = Canvas
+global.window = global as any
 
 const client = new S3Client({})
 
@@ -56,13 +62,28 @@ const getS3Object = (
   })
 }
 
-const convertFbxToGlb = (glbTmpFilePath: string) => {
-  return new Promise<APIGatewayProxyResult>((resolve, reject) => {
+const uploadObjectToS3 = async (
+  Bucket: string,
+  Folder: string,
+  Key: string,
+  Body: Buffer
+) => {
+  const uploadObjectCommand = new PutObjectCommand({
+    Bucket,
+    Key: `${Folder}/${Key}`,
+    Body,
+  })
+
+  await client.send(uploadObjectCommand)
+}
+
+const convertFbxToGlb = () => {
+  return new Promise<Buffer>((resolve, reject) => {
     console.info('Initializing FBX loader...')
     const fbxLoader = new FBXLoader()
 
     fbxLoader.load(
-      'https://test-hwp-7331.s3.eu-central-1.amazonaws.com/TEST/2100-000A1-HG-L9-MONTAGE-2675_VAE.fbx?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA4VKOO6347UKTHJWC%2F20220804%2Feu-central-1%2Fs3%2Faws4_request&X-Amz-Date=20220804T080837Z&X-Amz-Expires=21600&X-Amz-Signature=7238db4c722b4eabffe67447b9bc00a6effe94d42ef1e98947f8516ffaf0bacf&X-Amz-SignedHeaders=host',
+      'https://test-hwp-7331.s3.eu-central-1.amazonaws.com/TEST/2100-000A1-HG-L9-MONTAGE-2675_VAE_FT.fbx?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA4VKOO6347UKTHJWC%2F20220804%2Feu-central-1%2Fs3%2Faws4_request&X-Amz-Date=20220804T114552Z&X-Amz-Expires=21600&X-Amz-Signature=06c6b749b573ae199c09d51fc14c00ef9ee7ea4500cfcdd9e50a62ac3115498c&X-Amz-SignedHeaders=host',
       object => {
         console.info('FBX File parsed! Starting conversion to GLB...')
 
@@ -71,18 +92,15 @@ const convertFbxToGlb = (glbTmpFilePath: string) => {
         gltfExporter.parse(
           object,
           async result => {
-            console.info('GLB File created!', result)
-            await fs.writeFile(glbTmpFilePath, result.toString(), {
-              flag: 'w',
-            })
+            const arrayBuffer = result as ArrayBuffer
+            console.info('GLB File created!', arrayBuffer.byteLength)
 
-            resolve({
-              statusCode: 200,
-              body: JSON.stringify({
-                message: 'result',
-                dataSize: 0,
-              }),
-            })
+            const buffer = Buffer.alloc(arrayBuffer.byteLength)
+            const view = new Uint8Array(arrayBuffer)
+
+            for (let i = 0; i < buffer.length; ++i) buffer[i] = view[i]
+
+            resolve(buffer)
           },
           { binary: true }
         )
@@ -97,6 +115,10 @@ export const lambdaHandler = async (event: GetS3ObjectByKeyEvent) => {
   if (!event?.key || !event.folder || !process.env.BUCKET_NAME)
     return { statusCode: 400, body: 'Wrong parameters provided!' }
 
+  const Bucket = process.env.BUCKET_NAME
+  const Folder = event.folder
+  const Key = event.key
+
   // const fullFBXPath = `${process.env.BUCKET_NAME}/${event.folder}/${event.key}`
   // console.info('Fetching data from Bucket:', fullFBXPath)
 
@@ -109,7 +131,7 @@ export const lambdaHandler = async (event: GetS3ObjectByKeyEvent) => {
   // console.info('FBX loaded from S3. File size in bytes:', data.length)
 
   // const fbxTmpFilePath = '/tmp/fbx_1.fbx'
-  const glbTmpFilePath = '/tmp/glb_1.glb'
+  // const glbTmpFilePath = '/tmp/glb_1.glb'
 
   // console.info('Writing FBX file to tmp directory...')
 
@@ -119,7 +141,14 @@ export const lambdaHandler = async (event: GetS3ObjectByKeyEvent) => {
   //   flag: 'w',
   // })
 
-  const handlerResponse = await convertFbxToGlb(glbTmpFilePath)
+  const handlerResponse = await convertFbxToGlb()
 
-  return handlerResponse
+  const outFileName = Key.replace('.fbx', '.glb')
+
+  await uploadObjectToS3(Bucket, Folder, outFileName, handlerResponse)
+
+  return {
+    statusCode: 200,
+    message: 'Successfully uploaded GLB file to S3: ' + outFileName,
+  }
 }

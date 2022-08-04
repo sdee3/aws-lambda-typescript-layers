@@ -12,6 +12,7 @@ Resources:
       Environment:
         Variables:
           BUCKET_NAME: test-hwp-7331
+          LD_PRELOAD: /opt/nodejs/node_modules/canvas/build/Release/libz.so.1
       CodeUri: functions/dist/src
       Handler: app.lambdaHandler
       Runtime: nodejs16.x
