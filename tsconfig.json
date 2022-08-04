@@ -16,7 +16,7 @@
         "./layers/three/nodejs/node_modules/@andreekeberg/imagedata"
       ],
       "canvas": ["./layers/three/nodejs/node_modules/canvas"],
-      "fetch-blob": ["./layers/three/nodejs/node_modules/fetch-blob"],
+      "node-blob": ["./layers/three/nodejs/node_modules/node-blob"],
       "jsdom": ["./layers/three/nodejs/node_modules/jsdom"],
       "filereader": ["./layers/three/nodejs/node_modules/filereader"],
       "node-html-parser": [

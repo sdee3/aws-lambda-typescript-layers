@@ -3,13 +3,11 @@ import fs from 'fs/promises'
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { APIGatewayProxyResult } from 'aws-lambda'
 import { ImageData } from '@andreekeberg/imagedata'
-import { FileReader } from 'filereader'
 import fetch, { Request, Headers } from 'node-fetch'
 import { GetS3ObjectByKeyEvent } from './types'
-import { delay } from './utils/delay'
-import { Blob } from 'fetch-blob'
+import { FileReader } from './utils/FileReader'
+import Blob from 'node-blob'
 import { FBXLoader, GLTFExporter } from 'three-stdlib'
-// import { Canvas } from 'canvas'
 
 global.FileReader = FileReader
 global.ImageData = ImageData
@@ -17,7 +15,7 @@ global.Request = Request
 global.Headers = Headers
 global.Blob = Blob
 global.fetch = fetch
-// global.Canvas = Canvas
+global.window = global
 
 const client = new S3Client({})
 
@@ -58,70 +56,70 @@ const getS3Object = (
   })
 }
 
+const convertFbxToGlb = (glbTmpFilePath: string) => {
+  return new Promise<APIGatewayProxyResult>((resolve, reject) => {
+    console.info('Initializing FBX loader...')
+    const fbxLoader = new FBXLoader()
+
+    fbxLoader.load(
+      'https://test-hwp-7331.s3.eu-central-1.amazonaws.com/TEST/2100-000A1-HG-L9-MONTAGE-2675_VAE.fbx?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA4VKOO6347UKTHJWC%2F20220804%2Feu-central-1%2Fs3%2Faws4_request&X-Amz-Date=20220804T080837Z&X-Amz-Expires=21600&X-Amz-Signature=7238db4c722b4eabffe67447b9bc00a6effe94d42ef1e98947f8516ffaf0bacf&X-Amz-SignedHeaders=host',
+      object => {
+        console.info('FBX File parsed! Starting conversion to GLB...')
+
+        const gltfExporter = new GLTFExporter()
+
+        gltfExporter.parse(
+          object,
+          async result => {
+            console.info('GLB File created!', result)
+            await fs.writeFile(glbTmpFilePath, result.toString(), {
+              flag: 'w',
+            })
+
+            resolve({
+              statusCode: 200,
+              body: JSON.stringify({
+                message: 'result',
+                dataSize: 0,
+              }),
+            })
+          },
+          { binary: true }
+        )
+      },
+      progress => console.info(progress),
+      error => reject(error)
+    )
+  })
+}
+
 export const lambdaHandler = async (event: GetS3ObjectByKeyEvent) => {
   if (!event?.key || !event.folder || !process.env.BUCKET_NAME)
     return { statusCode: 400, body: 'Wrong parameters provided!' }
 
-  let handlerResponse: APIGatewayProxyResult | null = null
+  // const fullFBXPath = `${process.env.BUCKET_NAME}/${event.folder}/${event.key}`
+  // console.info('Fetching data from Bucket:', fullFBXPath)
 
-  const fullFBXPath = `${process.env.BUCKET_NAME}/${event.folder}/${event.key}`
-  console.info('Fetching data from Bucket:', fullFBXPath)
+  // const data = await getS3Object(
+  //   process.env.BUCKET_NAME,
+  //   event.folder,
+  //   event.key
+  // )
 
-  const data = await getS3Object(
-    process.env.BUCKET_NAME,
-    event.folder,
-    event.key
-  )
+  // console.info('FBX loaded from S3. File size in bytes:', data.length)
 
-  console.info('FBX loaded from S3. File size in bytes:', data.length)
-
-  const fbxTmpFilePath = '/tmp/fbx_1.fbx'
+  // const fbxTmpFilePath = '/tmp/fbx_1.fbx'
   const glbTmpFilePath = '/tmp/glb_1.glb'
 
-  console.info('Writing FBX file to tmp directory...')
+  // console.info('Writing FBX file to tmp directory...')
 
-  const fbxFileArrayBuffer = new Uint8Array(Buffer.from(data))
+  // const fbxFileArrayBuffer = new Uint8Array(Buffer.from(data))
 
-  await fs.writeFile(fbxTmpFilePath, fbxFileArrayBuffer, {
-    flag: 'w',
-  })
+  // await fs.writeFile(fbxTmpFilePath, fbxFileArrayBuffer, {
+  //   flag: 'w',
+  // })
 
-  console.info('Initializing FBX loader...')
-
-  const fbxLoader = new FBXLoader()
-
-  fbxLoader.load(
-    'https://test-hwp-7331.s3.eu-central-1.amazonaws.com/TEST/2100-000A1-HG-L9-MONTAGE-2675_VAE.fbx?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA4VKOO6347UKTHJWC%2F20220804%2Feu-central-1%2Fs3%2Faws4_request&X-Amz-Date=20220804T080837Z&X-Amz-Expires=21600&X-Amz-Signature=7238db4c722b4eabffe67447b9bc00a6effe94d42ef1e98947f8516ffaf0bacf&X-Amz-SignedHeaders=host',
-    object => {
-      console.info(object)
-      console.info('FBX File parsed! Starting conversion to GLB...')
-
-      const gltfExporter = new GLTFExporter()
-
-      gltfExporter.parse(
-        object,
-        async result => {
-          console.info('GLB File created!', result)
-          await fs.writeFile(glbTmpFilePath, result.toString(), {
-            flag: 'w',
-          })
-        },
-        { binary: true }
-      )
-    },
-    progress => console.info(progress),
-    error => console.error(error)
-  )
-
-  await delay(20000)
-
-  handlerResponse = {
-    statusCode: 200,
-    body: JSON.stringify({
-      message: event.key,
-      dataSize: data.length,
-    }),
-  }
+  const handlerResponse = await convertFbxToGlb(glbTmpFilePath)
 
   return handlerResponse
 }
