@@ -23,7 +23,8 @@
           "filereader": "./layers/three/nodejs/node_modules/filereader",
           "jsdom": "./layers/three/nodejs/node_modules/jsdom",
           "node-html-parser": "./layers/three/nodejs/node_modules/node-html-parser",
-          "three": "./layers/three/nodejs/node_modules/three"
+          "three": "./layers/three/nodejs/node_modules/three",
+          "three-stdlib": ["./layers/three/nodejs/node_modules/three-stdlib"]
         }
       }
     ]

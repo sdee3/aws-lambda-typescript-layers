@@ -7,7 +7,8 @@
     "jsdom": "^20.0.0",
     "node-fetch": "^3.2.10",
     "node-html-parser": "^5.3.3",
-    "three": "^0.142.0"
+    "three": "^0.142.0",
+    "three-stdlib": "^2.13.0"
   },
   "description": "",
   "name": "nodejs",

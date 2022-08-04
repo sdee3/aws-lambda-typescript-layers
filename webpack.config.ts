@@ -8,6 +8,10 @@ const config: Configuration = {
   module: {
     rules: [
       {
+        test: /\.node$/,
+        use: 'node-loader',
+      },
+      {
         test: /\.(ts|js)?$/,
         exclude: /node_modules/,
         use: {
@@ -40,6 +44,10 @@ const config: Configuration = {
       jsdom: path.resolve(
         __dirname,
         './layers/three/nodejs/node_modules/jsdom'
+      ),
+      'node-fetch': path.resolve(
+        __dirname,
+        './layers/three/nodejs/node_modules/node-fetch'
       ),
       filereader: path.resolve(
         __dirname,
