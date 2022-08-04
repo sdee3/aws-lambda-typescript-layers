@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "@aws-sdk/client-s3": "^3.129.0",
-    "fbx2gltf": "^0.9.7-p1"
+    "@aws-sdk/s3-request-presigner": "^3.142.0"
   },
   "description": "",
   "name": "nodejs",

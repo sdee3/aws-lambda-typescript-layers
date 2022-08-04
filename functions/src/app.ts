@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Stream } from 'stream'
 import {
   GetObjectCommand,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3'
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { ImageData } from '@andreekeberg/imagedata'
 import { JSDOM } from 'jsdom'
 import fetch, { Request, Headers } from 'node-fetch'
@@ -23,42 +23,30 @@ global.fetch = fetch as any
 global.Canvas = Canvas
 global.window = global as any
 
-const client = new S3Client({})
+const client = new S3Client({
+  credentials: {
+    accessKeyId: process.env.ACCESS_KEY_ID ?? '',
+    secretAccessKey: process.env.SECRET_ACCESS_KEY ?? '',
+  },
+  region: 'eu-central-1',
+})
 
-const getS3Object = (
+const getS3ObjectUrl = (
   Bucket: string,
   Folder: string,
   Key: string
 ): Promise<string> => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async resolve => {
     const getObjectCommand = new GetObjectCommand({
       Bucket,
       Key: `${Folder}/${Key}`,
     })
 
-    try {
-      const response = await client.send(getObjectCommand)
+    const url = await getSignedUrl(client, getObjectCommand, {
+      expiresIn: 3600,
+    })
 
-      if (!response?.Body) throw new Error('No response')
-
-      const responseDataChunks: string[] = []
-      const responseBodyStream = response.Body as Stream
-
-      // Handle an error while streaming the response body
-      responseBodyStream.once('error', (err: Error) => reject(err))
-
-      // Attach a 'data' listener to add the chunks of data to our array
-      // Each chunk is a Buffer instance
-      responseBodyStream.on('data', (chunk: Buffer) =>
-        responseDataChunks.push(chunk.toString())
-      )
-
-      // Once the stream has no more data, join the chunks into a string and return the string
-      responseBodyStream.once('end', () => resolve(responseDataChunks.join('')))
-    } catch (err) {
-      // Handle the error or throw
-      return reject(err)
-    }
+    resolve(url)
   })
 }
 
@@ -77,13 +65,13 @@ const uploadObjectToS3 = async (
   await client.send(uploadObjectCommand)
 }
 
-const convertFbxToGlb = () => {
+const convertFbxToGlb = (s3ObjectUrl: string) => {
   return new Promise<Buffer>((resolve, reject) => {
     console.info('Initializing FBX loader...')
     const fbxLoader = new FBXLoader()
 
     fbxLoader.load(
-      'https://test-hwp-7331.s3.eu-central-1.amazonaws.com/TEST/2100-000A1-HG-L9-MONTAGE-2675_VAE_FT.fbx?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA4VKOO6347UKTHJWC%2F20220804%2Feu-central-1%2Fs3%2Faws4_request&X-Amz-Date=20220804T114552Z&X-Amz-Expires=21600&X-Amz-Signature=06c6b749b573ae199c09d51fc14c00ef9ee7ea4500cfcdd9e50a62ac3115498c&X-Amz-SignedHeaders=host',
+      'https://test-hwp-7331.s3.eu-central-1.amazonaws.com/TEST/2100-000A1-HG-L9-MONTAGE-2675_VAE_FT.fbx',
       object => {
         console.info('FBX File parsed! Starting conversion to GLB...')
 
@@ -119,29 +107,8 @@ export const lambdaHandler = async (event: GetS3ObjectByKeyEvent) => {
   const Folder = event.folder
   const Key = event.key
 
-  // const fullFBXPath = `${process.env.BUCKET_NAME}/${event.folder}/${event.key}`
-  // console.info('Fetching data from Bucket:', fullFBXPath)
-
-  // const data = await getS3Object(
-  //   process.env.BUCKET_NAME,
-  //   event.folder,
-  //   event.key
-  // )
-
-  // console.info('FBX loaded from S3. File size in bytes:', data.length)
-
-  // const fbxTmpFilePath = '/tmp/fbx_1.fbx'
-  // const glbTmpFilePath = '/tmp/glb_1.glb'
-
-  // console.info('Writing FBX file to tmp directory...')
-
-  // const fbxFileArrayBuffer = new Uint8Array(Buffer.from(data))
-
-  // await fs.writeFile(fbxTmpFilePath, fbxFileArrayBuffer, {
-  //   flag: 'w',
-  // })
-
-  const handlerResponse = await convertFbxToGlb()
+  const s3ObjectUrl = await getS3ObjectUrl(Bucket, Folder, Key)
+  const handlerResponse = await convertFbxToGlb(s3ObjectUrl)
 
   const outFileName = Key.replace('.fbx', '.glb')
 
