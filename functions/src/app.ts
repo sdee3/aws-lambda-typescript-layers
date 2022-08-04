@@ -4,14 +4,19 @@ import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { APIGatewayProxyResult } from 'aws-lambda'
 import { ImageData } from '@andreekeberg/imagedata'
 import { FileReader } from 'filereader'
-import { Request } from 'node-fetch'
+import fetch, { Request, Headers } from 'node-fetch'
 import { GetS3ObjectByKeyEvent } from './types'
+import { delay } from './utils/delay'
+import { Blob } from 'fetch-blob'
 import { FBXLoader, GLTFExporter } from 'three-stdlib'
 // import { Canvas } from 'canvas'
 
 global.FileReader = FileReader
 global.ImageData = ImageData
 global.Request = Request
+global.Headers = Headers
+global.Blob = Blob
+global.fetch = fetch
 // global.Canvas = Canvas
 
 const client = new S3Client({})
@@ -71,8 +76,9 @@ export const lambdaHandler = async (event: GetS3ObjectByKeyEvent) => {
   console.info('FBX loaded from S3. File size in bytes:', data.length)
 
   const fbxTmpFilePath = '/tmp/fbx_1.fbx'
+  const glbTmpFilePath = '/tmp/glb_1.glb'
 
-  console.info('Writing file to tmp directory')
+  console.info('Writing FBX file to tmp directory...')
 
   const fbxFileArrayBuffer = new Uint8Array(Buffer.from(data))
 
@@ -80,23 +86,34 @@ export const lambdaHandler = async (event: GetS3ObjectByKeyEvent) => {
     flag: 'w',
   })
 
+  console.info('Initializing FBX loader...')
+
   const fbxLoader = new FBXLoader()
-  fbxLoader.load(fbxTmpFilePath, object => {
-    console.info(object)
 
-    // const glbTmpFilePath = './tmp/glb_1.glb'
-    const gltfExporter = new GLTFExporter()
+  fbxLoader.load(
+    'https://test-hwp-7331.s3.eu-central-1.amazonaws.com/TEST/2100-000A1-HG-L9-MONTAGE-2675_VAE.fbx?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA4VKOO6347UKTHJWC%2F20220804%2Feu-central-1%2Fs3%2Faws4_request&X-Amz-Date=20220804T080837Z&X-Amz-Expires=21600&X-Amz-Signature=7238db4c722b4eabffe67447b9bc00a6effe94d42ef1e98947f8516ffaf0bacf&X-Amz-SignedHeaders=host',
+    object => {
+      console.info(object)
+      console.info('FBX File parsed! Starting conversion to GLB...')
 
-    gltfExporter.parse(
-      object,
-      result => {
-        console.info('GLB File created!', result)
-      },
-      { binary: true }
-    )
-  })
+      const gltfExporter = new GLTFExporter()
 
-  console.info('FBX File parsed! Starting conversion to GLB...')
+      gltfExporter.parse(
+        object,
+        async result => {
+          console.info('GLB File created!', result)
+          await fs.writeFile(glbTmpFilePath, result.toString(), {
+            flag: 'w',
+          })
+        },
+        { binary: true }
+      )
+    },
+    progress => console.info(progress),
+    error => console.error(error)
+  )
+
+  await delay(20000)
 
   handlerResponse = {
     statusCode: 200,
