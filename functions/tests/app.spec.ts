@@ -5,8 +5,8 @@ describe('Unit test for app handler', function () {
   it('verifies error code 400 response', async () => {
     const event: APIGatewayProxyEvent = {
       queryStringParameters: {
-        a: '1',
-      },
+        a: '1'
+      }
     } as any
     const result = await lambdaHandler(event)
 
@@ -18,7 +18,7 @@ describe('Unit test for app handler', function () {
     process.env.BUCKET_NAME = 'test-hwp-7331'
 
     const event: APIGatewayProxyEvent = {
-      key: 'TEST/TEST-TEST-EG-PLP-foerdertechnik-001.mbtiles',
+      key: 'TEST/TEST-TEST-EG-PLP-foerdertechnik-001.mbtiles'
     } as any
     const result = await lambdaHandler(event)
 

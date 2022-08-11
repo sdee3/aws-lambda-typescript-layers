@@ -9,7 +9,7 @@ const config: Configuration = {
     rules: [
       {
         test: /\.node$/,
-        use: 'node-loader',
+        use: 'node-loader'
       },
       {
         test: /\.(ts|js)?$/,
@@ -17,11 +17,11 @@ const config: Configuration = {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['@babel/preset-env', '@babel/preset-typescript'],
-          },
-        },
-      },
-    ],
+            presets: ['@babel/preset-env', '@babel/preset-typescript']
+          }
+        }
+      }
+    ]
   },
   resolve: {
     alias: {
@@ -29,44 +29,17 @@ const config: Configuration = {
         __dirname,
         'layers/aws-deps/nodejs/node_modules/@aws-sdk/client-s3'
       ),
-      '@andreekeberg/imagedata': path.resolve(
-        __dirname,
-        './layers/three/nodejs/node_modules/@andreekeberg/imagedata'
-      ),
-      canvas: path.resolve(
-        __dirname,
-        './layers/three/nodejs/node_modules/canvas'
-      ),
-      'fetch-blob': path.resolve(
-        __dirname,
-        './layers/three/nodejs/node_modules/fetch-blob'
-      ),
-      jsdom: path.resolve(
-        __dirname,
-        './layers/three/nodejs/node_modules/jsdom'
-      ),
-      'node-fetch': path.resolve(
-        __dirname,
-        './layers/three/nodejs/node_modules/node-fetch'
-      ),
-      filereader: path.resolve(
-        __dirname,
-        './layers/three/nodejs/node_modules/filereader'
-      ),
-      'node-html-parser': path.resolve(
-        __dirname,
-        './layers/three/nodejs/node_modules/node-html-parser'
-      ),
       three: path.resolve(__dirname, 'layers/three/nodejs/node_modules/three'),
+      vblob: path.resolve(__dirname, 'layers/three/nodejs/node_modules/vblob')
     },
-    extensions: ['.ts', '.js'],
+    extensions: ['.ts', '.js']
   },
   output: {
     chunkFormat: 'commonjs',
     libraryTarget: 'commonjs',
     path: path.resolve(__dirname, 'functions/dist'),
-    filename: 'app.js',
-  },
+    filename: 'app.js'
+  }
 }
 
 export default config

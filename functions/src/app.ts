@@ -1,33 +1,34 @@
-import { GetS3ObjectByKeyEvent } from './types'
-import {
-  convertFbxToGlb,
-  getS3ObjectUrl,
-  initS3Client,
-  overrideGlobal,
-  uploadObjectToS3,
-} from './utils'
+import { APIGatewayProxyEvent, APIGatewayProxyResult, Handler } from 'aws-lambda'
+import { IO, S3IO } from './io'
+import { convertFbxToGlb } from './utils/convertFbxToGlb'
 
-overrideGlobal()
+export type APIGatewayProxyHandler = Handler<APIGatewayProxyEvent, APIGatewayProxyResult>
 
-const client = initS3Client()
+export interface GetS3ObjectByKeyEvent extends APIGatewayProxyEvent {
+  key?: string
+}
 
 export const lambdaHandler = async (event: GetS3ObjectByKeyEvent) => {
-  if (!event?.key || !event.folder || !process.env.BUCKET_NAME)
-    return { statusCode: 400, body: 'Wrong parameters provided!' }
+  if (!process.env.BUCKET_NAME) {
+    return { statusCode: 400, body: 'No bucket configured' }
+  }
 
-  const Bucket = process.env.BUCKET_NAME
-  const Folder = event.folder
-  const Key = event.key
+  const { key } = event
 
-  const s3ObjectUrl = await getS3ObjectUrl(client, Bucket, Folder, Key)
-  const handlerResponse = await convertFbxToGlb(s3ObjectUrl)
+  if (!key || typeof key != 'string') {
+    return { statusCode: 400, body: 'Key parameter is missing or not string!' }
+  }
 
-  const outFileName = Key.replace('.fbx', '.glb')
+  const io: IO = new S3IO(process.env.BUCKET_NAME)
 
-  await uploadObjectToS3(client, Bucket, Folder, outFileName, handlerResponse)
+  const fbx = await io.readFile(key)
+  const glb = await convertFbxToGlb(fbx.buffer)
+
+  const outputObjectKey = `${key.slice(0, -4)}.glb`
+  await io.writeFile(outputObjectKey, glb)
 
   return {
     statusCode: 200,
-    message: 'Successfully uploaded GLB file to S3: ' + outFileName,
+    message: 'Successfully uploaded GLB file to S3: ' + outputObjectKey
   }
 }

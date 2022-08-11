@@ -9,24 +9,12 @@
     "moduleResolution": "node",
     "noImplicitAny": false,
     "paths": {
-      "@aws-sdk/client-s3": [
-        "./layers/aws-deps/nodejs/node_modules/@aws-sdk/client-s3"
-      ],
+      "@aws-sdk/client-s3": ["./layers/aws-deps/nodejs/node_modules/@aws-sdk/client-s3"],
       "@aws-sdk/s3-request-presigner": [
         "./layers/aws-deps/nodejs/node_modules/@aws-sdk/s3-request-presigner"
       ],
-      "@andreekeberg/imagedata": [
-        "./layers/three/nodejs/node_modules/@andreekeberg/imagedata"
-      ],
-      "canvas": ["./layers/three/nodejs/node_modules/canvas"],
-      "node-blob": ["./layers/three/nodejs/node_modules/node-blob"],
-      "jsdom": ["./layers/three/nodejs/node_modules/jsdom"],
-      "filereader": ["./layers/three/nodejs/node_modules/filereader"],
-      "node-html-parser": [
-        "./layers/three/nodejs/node_modules/node-html-parser"
-      ],
       "three": ["./layers/three/nodejs/node_modules/three"],
-      "three-stdlib": ["./layers/three/nodejs/node_modules/three-stdlib"]
+      "vblob": ["./layers/three/nodejs/node_modules/vblob"]
     },
     "resolveJsonModule": true,
     "rootDir": "./functions",
@@ -36,12 +24,5 @@
     "types": ["node", "jest"]
   },
   "include": ["functions/**/*"],
-  "exclude": [
-    "functions/dist",
-    "webpack.config.ts",
-    "layers",
-    "events",
-    ".aws-sam",
-    "node_modules"
-  ]
+  "exclude": ["functions/dist", "webpack.config.ts", "layers", "events", ".aws-sam", "node_modules"]
 }

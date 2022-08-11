@@ -1,15 +1,7 @@
 {
   "dependencies": {
-    "@andreekeberg/imagedata": "^1.0.2",
-    "canvas": "^2.9.3",
-    "fetch-blob": "^3.2.0",
-    "filereader": "^0.10.3",
-    "jsdom": "^20.0.0",
-    "node-blob": "^0.0.2",
-    "node-fetch": "2.6.1",
-    "node-html-parser": "^5.3.3",
-    "three": "^0.142.0",
-    "three-stdlib": "^2.13.0"
+    "three": "0.143.0",
+    "vblob": "1.0.2"
   },
   "description": "",
   "name": "nodejs",

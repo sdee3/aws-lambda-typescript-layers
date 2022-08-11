@@ -7,9 +7,7 @@ This project contains source code and supporting files for a serverless applicat
 - `functions/src` - Code for the application's Lambda function.
 - `functions/tests` - Unit tests for the application code.
 - `events` - Invocation events that you can use to invoke the function.
-- `template.yaml` - A template that defines the application's AWS resources.
-
-The application uses several AWS resources, including Lambda functions and an API Gateway API. These resources are defined in the `template.yaml` file in this project. You can update the template to add AWS resources through the same deployment process that updates your application code.
+- `template.yaml` - A template that defines the application's AWS resources, environment variables, layers, and other configurable settings.
 
 ## Build and Deploy the sample application
 
@@ -42,8 +40,39 @@ You can find your API Gateway Endpoint URL in the output values displayed after 
 
 ## How to test locally
 
-1. Navigate to the `functions/dist` folder and open the compiled `app.js` containing the Lambda handler function.
-2. If you're using VSCode, pressing F5 will launch a debug process using the provided `.vscode/launch.json` configuration.
+The AWS Toolkit extension (`amazonwebservices.aws-toolkit-vscode`) is highly recommended for the easiest credential management, S3 operations, debugging, and deployment features.
+
+1. Once the Typescript code is ready to be tested, run `npm run build`.
+2. Navigate to the `functions/dist` folder and open the compiled `app.js` containing the Lambda handler function.
+3. If you're using VSCode, pressing F5 will launch a debug process using the provided `.vscode/launch.json` configuration, which must be within the root of your entire project where VSCode is open.
+
+Expected `launch.json` structure:
+
+```json
+{
+  "configurations": [
+    {
+      "type": "aws-sam",
+      "request": "direct-invoke",
+      "name": "HelloWorldFunction",
+      "invokeTarget": {
+        "target": "template",
+        "templatePath": "${workspaceFolder}/lambda/template.yaml",
+        "logicalId": "HelloWorldFunction"
+      },
+      "lambda": {
+        "payload": {
+          "json": {
+            "folder": "TEST",
+            "key": "cottage_fbx.fbx"
+          }
+        },
+        "environmentVariables": {}
+      }
+    }
+  ]
+}
+```
 
 ## Unit tests
 
